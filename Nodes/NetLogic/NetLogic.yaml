@@ -1,0 +1,9 @@
+Name: NetLogic
+Type: FolderType
+Children:
+- Name: FanControllerLogic
+  Id: g=1d48f9f5337bad038c509cf782ccb4eb
+  Type: NetLogic
+  Children:
+  - Class: Method
+    Name: Init
