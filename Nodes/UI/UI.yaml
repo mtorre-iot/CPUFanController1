@@ -38,7 +38,7 @@ Children:
   - Name: EnableVirtualKeyboard
     Type: BaseDataVariableType
     DataType: Boolean
-    Value: false
+    Value: true
   - Name: StartWindow
     Type: NodePointer
     DataType: NodeId
@@ -68,6 +68,10 @@ Children:
       Value: {"Id":14,"Namespace":1}
   - Name: Sessions
     Type: BaseObjectType
+  - Name: DynamicVariablesPollingTime
+    Type: BaseDataVariableType
+    DataType: Duration
+    Value: "0:00:00:1.0000000"
 - Name: MainWindow
   Id: g=472517e6000a0a80f6520a5f524259df
   Supertype: Window

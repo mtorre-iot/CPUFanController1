@@ -1,0 +1,28 @@
+Name: Monitor
+Type: FolderType
+Children:
+- Name: CPUTempInst
+  Id: g=3cefc0a9912e3452d2e856282814674b
+  Type: BaseDataVariableType
+  DataType: Float
+  Value: 5.5
+- Name: CPUTempAvg
+  Id: g=0968810e6dda8b94f7617d99a254826e
+  Type: BaseDataVariableType
+  DataType: Float
+  Value: 0.0
+- Name: FANStateColor
+  Id: g=6bbb77607a80b3a06603b38b63c4d1dc
+  Type: BaseDataVariableType
+  DataType: Color
+  Value: "#00ff00"
+- Name: FANOnLimit
+  Id: g=7287de5c0e0ad8722378709882a08b77
+  Type: BaseDataVariableType
+  DataType: Float
+  Value: 100.0
+- Name: FANOffLimit
+  Id: g=fb17a26c3f1446c6beaba771d882e01a
+  Type: BaseDataVariableType
+  DataType: Float
+  Value: 50.0

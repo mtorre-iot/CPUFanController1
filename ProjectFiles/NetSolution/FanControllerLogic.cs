@@ -1,70 +1,157 @@
 #region Using directives
 using System;
 using UAManagedCore;
-using OpcUa = UAManagedCore.OpcUa;
-using FTOptix.HMIProject;
-using FTOptix.UI;
-using FTOptix.Retentivity;
-using FTOptix.NativeUI;
-using FTOptix.Core;
-using FTOptix.CoreBase;
 using FTOptix.NetLogic;
-using LibreHardwareMonitor.Hardware;
+using FTOptix.HMIProject;
+using System.Reflection;
 #endregion
 
-public class FanControllerLogic : BaseNetLogic
-{
-    public override void Start()
+//namespace CPUFanController1
+//{
+    public class FanControllerLogic : BaseNetLogic
     {
-        // Insert code to be executed when the user-defined logic is started
-    }
-
-    public override void Stop()
-    {
-        // Insert code to be executed when the user-defined logic is stopped
-    }
-
-    [ExportMethod]
-    public void Init()
-    {
-        Monitor();
-    }
-
-    public void Monitor()
-    {
-        Computer computer = new Computer
+        private Config cfg;
+        private UiConfig uicfg;
+        private OptixMiscFunctions f;
+        private HardwareMonitor monitor;
+        private ProjectFolder project_current;
+        public override void Start()
         {
-            IsCpuEnabled = true,
-            IsGpuEnabled = false,
-            IsMemoryEnabled = false,
-            IsMotherboardEnabled = false,
-            IsControllerEnabled = false,
-            IsNetworkEnabled = false,
-            IsStorageEnabled = false
-        };
-
-        computer.Open();
-        computer.Accept(new UpdateVisitor());
-
-        foreach (IHardware hardware in computer.Hardware)
-        {
-            Log.Info(string.Format("Hardware: {0}", hardware.Name));
+            cfg = new Config();
+            uicfg = new UiConfig();
+            project_current = Project.Current;
+            f = new OptixMiscFunctions(project_current);
             
-            foreach (IHardware subhardware in hardware.SubHardware)
-            {
-                Log.Info(string.Format("\tSubhardware: {0}", subhardware.Name));
-                
-                foreach (ISensor sensor in subhardware.Sensors)
-                {
-                    Log.Info(string.Format("\t\tSensor: {0}, value: {1}", sensor.Name, sensor.Value));
-                }
-            }
+            monitor = new HardwareMonitor(cfg);
+        }
+        public override void Stop()
+        {
+            monitor.Dispose();
+        }
 
-            foreach (ISensor sensor in hardware.Sensors)
+        [ExportMethod]
+        public void Monitor()
+        {
+            if (monitor.isOpen == false)
             {
-                Log.Info(string.Format("\tSensor: {0}, value: {1}", sensor.Name, sensor.Value));
+                Log.Warning($"{MethodBase.GetCurrentMethod().Name} Hardware Monitor is NOT Open");
+                return;
+            }
+            try
+            {
+                monitor.Monitor();
+            }
+            catch (Exception e)
+            {
+                Log.Error ($"{MethodBase.GetCurrentMethod().Name} Error trying to get Hardware Monitor data. Exception: {e.Message}");
             }
         }
-        computer.Close();
-    }
-}
+
+        [ExportMethod]
+        public void Open()
+        {
+            if (monitor.isOpen == true)
+            {
+                Log.Warning($"{MethodBase.GetCurrentMethod().Name} Hardware Monitor was already Open");
+                return;
+            }
+            try
+            {
+                monitor.Open();
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} Hardware Monitor is Open");
+            }
+            catch (Exception e)
+            {
+                Log.Error ($"{MethodBase.GetCurrentMethod().Name} Error trying to open Hardware Monitor. Exception: {e.Message}");
+            }
+        }
+
+
+        [ExportMethod]
+        public void Close()
+        {
+            if (monitor.isOpen == false)
+            {
+                Log.Warning($"{MethodBase.GetCurrentMethod().Name} Hardware Monitor is already Closed");
+                return;
+            }
+            try
+            {
+                monitor.Close();
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} Hardware Monitor is Closed");
+            }
+            catch (Exception e)
+            {
+                Log.Error ($"{MethodBase.GetCurrentMethod().Name} Error trying to close Hardware Monitor. Exception: {e.Message}");
+            }
+        }
+        [ExportMethod]
+        public void StartScan()
+        {
+            //
+            // Make sure the monitor is opened
+            //
+            if (monitor.isOpen == false)
+            {
+                Log.Warning($"{MethodBase.GetCurrentMethod().Name} Hardware Monitor is NOT Open");
+                return;
+            }
+            //
+            // Create a Periodic Task
+            //
+            var scanTask = new PeriodicTask(MonitorScanner, cfg.monitorPollPeriod, LogicObject);
+            scanTask.Start();
+            //MonitorScanner();
+        }
+        private void MonitorScanner(PeriodicTask task)
+        {
+            MonitorValues values = new MonitorValues();
+            try 
+            {
+                Monitor();
+                //
+                // Pick the values from the recently refreshed monitoredDB
+                //
+                values = monitor.GetSelectedValues(cfg.SelectedSubHardware, cfg.SelectedSensorName, cfg.SelectedSensorType);
+            }
+            catch (Exception e)
+            {
+                Log.Error ($"{MethodBase.GetCurrentMethod().Name} Error trying to get new monitor data. Exception: {e.Message}");
+            }
+            //
+            // Put them into Model
+            //
+            f.UpdateVariableModelValue(uicfg.modelVarSelectedValueStr, values.instantaneous.ToString());
+            f.UpdateVariableModelValue(uicfg.modelVarSelectedValueAvgStr, values.average.ToString());
+            //
+            // Detect Alarms and take actions
+            // Get upper and lower limits
+            //
+            float upperLimit = f.GetVariableModelValue(uicfg.modelFanOnLimitStr);
+            float lowerLimit = f.GetVariableModelValue(uicfg.modelFanOffLimitStr);
+            if (lowerLimit > upperLimit) 
+            {
+                Log.Warning("There's a configuration error - upper limit cannot be lower than lower limit.");
+            }
+            else
+            {
+                HardwareMonitor.FANState state = monitor.DetectAlarmLimits(cfg.SelectedSubHardware, cfg.SelectedSensorName, cfg.SelectedSensorType, upperLimit, lowerLimit);
+                Log.Info("FAN STATE: " + state.ToString());
+                //
+                // Change color of the LED according to change
+                //
+                switch (state)
+                {
+                    case HardwareMonitor.FANState.on:
+                        f.UpdateVariableModelValue(uicfg.modelFanStateColorStr, uicfg.fanStateOnColor);
+                        break;
+                    case HardwareMonitor.FANState.off:
+                        f.UpdateVariableModelValue(uicfg.modelFanStateColorStr, uicfg.fanStateOffColor);
+                        break;
+                }
+            }
+        }
+    }   
+
+    
+//}

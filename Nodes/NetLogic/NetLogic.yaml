@@ -6,4 +6,10 @@ Children:
   Type: NetLogic
   Children:
   - Class: Method
-    Name: Init
+    Name: Monitor
+  - Class: Method
+    Name: Open
+  - Class: Method
+    Name: Close
+  - Class: Method
+    Name: StartScan
