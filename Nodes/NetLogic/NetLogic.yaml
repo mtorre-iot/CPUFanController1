@@ -13,3 +13,13 @@ Children:
     Name: Close
   - Class: Method
     Name: StartScan
+  - Name: PollingPeriod
+    Type: BaseDataVariableType
+    DataType: Int32
+    Description: {"LocaleId":"en-US","Text":"Time between polls, in milliseconds"}
+    Value: 1000
+  - Name: AverageWindow
+    Type: BaseDataVariableType
+    DataType: Int32
+    Description: {"LocaleId":"en-US","Text":"Moving Average Time Window"}
+    Value: 10000

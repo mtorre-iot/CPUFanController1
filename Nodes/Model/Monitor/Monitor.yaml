@@ -1,4 +1,5 @@
 Name: Monitor
+Id: g=84bce95cf558784382154454fd0dbb39
 Type: FolderType
 Children:
 - Name: CPUTempInst
@@ -26,3 +27,8 @@ Children:
   Type: BaseDataVariableType
   DataType: Float
   Value: 50.0
+- Name: FANState
+  Id: g=99752a804b4340f9d52d2d52a3af0ab3
+  Type: BaseDataVariableType
+  DataType: Boolean
+  Value: false

@@ -17,6 +17,7 @@ public class UiConfig : BaseNetLogic
     public readonly string modelVarSelectedValueStr = "Model/Monitor/CPUTempInst";
     public readonly string modelVarSelectedValueAvgStr = "Model/Monitor/CPUTempAvg";
     public readonly string modelFanStateColorStr = "Model/Monitor/FANStateColor";
+    public readonly string modelFanStateStr = "Model/Monitor/FANState";
     public readonly string modelFanOnLimitStr = "Model/Monitor/FANOnLimit";
     public readonly string modelFanOffLimitStr = "Model/Monitor/FANOffLimit";
     public readonly string fanStateOnColor = "4294901760";  //#FFFF0000 (RED)

@@ -28,6 +28,7 @@ using LibreHardwareMonitor.Hardware;
     {
         public bool isOpen = false;
         private Computer computer;
+        private int pollPeriod, averageWindow;
         private Config cfg;
         public DataTable monitoredDB;
 
@@ -46,6 +47,16 @@ using LibreHardwareMonitor.Hardware;
                     IsNetworkEnabled = false,
                     IsStorageEnabled = false
                 };
+            averageWindow = (int) cfg.MinimumAverageWindowVariable.Value;
+            if (averageWindow < cfg.MinimumAverageWindow)
+            {
+                averageWindow = cfg.MinimumAverageWindow;
+            }
+            pollPeriod = (int) cfg.MinimumPollingPeriodVariable.Value;
+            if (pollPeriod < cfg.MinimumPollingPeriod)
+            {
+                pollPeriod = cfg.MinimumPollingPeriod;
+            }
         }
         private void InitializeDB()
         {
@@ -129,7 +140,7 @@ using LibreHardwareMonitor.Hardware;
             }
             else
             {
-                float ratio = Convert.ToSingle(cfg.averagePeriod)/Convert.ToSingle(cfg.monitorPollPeriod);
+                float ratio = Convert.ToSingle(averageWindow)/Convert.ToSingle(pollPeriod);
                 if (ratio < 1.0f) ratio = 1.0f;
                 avg = (prev.average * (ratio-1.0f) + inst) / ratio;
             }

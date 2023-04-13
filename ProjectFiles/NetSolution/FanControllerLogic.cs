@@ -19,10 +19,20 @@ using System.Reflection;
         {
             cfg = new Config();
             uicfg = new UiConfig();
+            cfg.ReadConfigurationVariables(LogicObject);
+
             project_current = Project.Current;
             f = new OptixMiscFunctions(project_current);
             
             monitor = new HardwareMonitor(cfg);
+        //
+        // Open the connection to WMI
+        //
+        Open();
+        // 
+        // Now Start the Scan
+        //
+        StartScan();
         }
         public override void Stop()
         {
@@ -99,7 +109,12 @@ using System.Reflection;
             //
             // Create a Periodic Task
             //
-            var scanTask = new PeriodicTask(MonitorScanner, cfg.monitorPollPeriod, LogicObject);
+            int pollPeriod = (int) cfg.MinimumPollingPeriodVariable.Value;
+            if (pollPeriod < cfg.MinimumPollingPeriod)
+            {
+                pollPeriod = cfg.MinimumPollingPeriod;
+            }
+            var scanTask = new PeriodicTask(MonitorScanner, pollPeriod, LogicObject);
             scanTask.Start();
             //MonitorScanner();
         }
@@ -144,9 +159,11 @@ using System.Reflection;
                 {
                     case HardwareMonitor.FANState.on:
                         f.UpdateVariableModelValue(uicfg.modelFanStateColorStr, uicfg.fanStateOnColor);
+                        f.UpdateVariableModelValue(uicfg.modelFanStateStr, "1");
                         break;
                     case HardwareMonitor.FANState.off:
                         f.UpdateVariableModelValue(uicfg.modelFanStateColorStr, uicfg.fanStateOffColor);
+                        f.UpdateVariableModelValue(uicfg.modelFanStateStr, "0");
                         break;
                 }
             }
