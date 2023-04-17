@@ -21,5 +21,5 @@ Children:
   - Name: AverageWindow
     Type: BaseDataVariableType
     DataType: Int32
-    Description: {"LocaleId":"en-US","Text":"Moving Average Time Window"}
-    Value: 10000
+    Description: {"LocaleId":"en-US","Text":"Moving Average Time Window, in milliseconds"}
+    Value: 60000
